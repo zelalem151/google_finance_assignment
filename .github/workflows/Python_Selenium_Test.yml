@@ -1,0 +1,40 @@
+name: Python Selenium Manual and Midnight Trigger
+
+on:
+  workflow_dispatch:  # Manual trigger
+  schedule:
+    - cron: "0 0 * * *"  # Run daily at midnight UTC
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install Chrome dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable
+        sudo apt-get install -y xvfb  # Install X Virtual Framebuffer (for headless mode)
+    
+    - name: Install dependencies
+      run: |
+        pip install -r dependencies.txt
+        pip install selenium webdriver-manager pytest pytest-html
+
+    - name: Run tests
+      run: |
+        pytest tests/test_finance.py --html=report.html --self-contained-html
+
+    - name: Upload report
+      uses: actions/upload-artifact@v3  # Updated to v3
+      with:
+        name: test-report
+        path: report.html
